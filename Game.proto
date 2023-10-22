@@ -1,0 +1,49 @@
+syntax = "proto3";
+package Game;
+
+message CommonData {
+    int32 protoId = 1;
+    bytes body = 2;
+}
+
+// 帧消息
+message S2C_Frames{
+    repeated PlayerMove playerMove = 1;
+}
+message C2S_Frames{
+    PlayerMove playerMove =1;
+}
+
+message PlayerMove {
+    int32 playerId = 1;
+    string dateTime = 2;
+    PlayerMoveSpeed speed = 3;
+}
+
+message PlayerMoveSpeed {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+// 加入离开房间
+message S2C_PlayerJoin {
+    string serverTime = 1;
+}
+
+message S2C_PlayerLeave {
+    string serverTime = 1;
+}
+
+
+// 心跳检测
+message S2C_HeartBeat {
+    string serverTime = 1;
+}
+
+message C2S_HeartBeat {
+    string serverTime = 1;
+}
+
+
+
+
