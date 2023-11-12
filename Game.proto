@@ -8,40 +8,42 @@ message CommonData {
 
 // 帧消息
 message S2C_Frames{
-    repeated PlayerMove playerMove = 1;
+    required int32 timePast = 1;
+    required int32 frames = 2;
+    repeated PlayerMove playerMove = 3;
 }
 message C2S_Frames{
-    PlayerMove playerMove =1;
+    PlayerMove playerMove = 1;
 }
 
 message PlayerMove {
     int32 playerId = 1;
-    string dateTime = 2;
-    PlayerMoveSpeed speed = 3;
+    string dt = 2;
+    MoveSpeed speed = 3;
 }
 
-message PlayerMoveSpeed {
+message MoveSpeed {
     int32 x = 1;
     int32 y = 2;
 }
 
-// 加入离开房间
+// 加入房间
 message S2C_PlayerJoin {
     string serverTime = 1;
 }
 
+// 离开房间
 message S2C_PlayerLeave {
     string serverTime = 1;
 }
 
-
 // 心跳检测
 message S2C_HeartBeat {
-    string serverTime = 1;
+    int32 serverTime = 1;
 }
 
 message C2S_HeartBeat {
-    string serverTime = 1;
+    int32 serverTime = 1;
 }
 
 
