@@ -12,19 +12,16 @@ message S2C_Frames{
     required int32 frames = 2;
     repeated PlayerMove playerMove = 3;
 }
+
 message C2S_Frames{
     PlayerMove playerMove = 1;
 }
 
 message PlayerMove {
-    int32 playerId = 1;
-    string dt = 2;
-    MoveSpeed speed = 3;
-}
-
-message MoveSpeed {
-    int32 x = 1;
-    int32 y = 2;
+    required int32 dt = 1;
+    required int32 playerId = 2;
+    int32 velocityX = 3;
+    int32 velocityY = 4;
 }
 
 // 加入房间
