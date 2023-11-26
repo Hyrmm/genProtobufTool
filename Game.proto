@@ -1,9 +1,13 @@
 syntax = "proto3";
 package Game;
 
-message CommonData {
-    int32 protoId = 1;
-    bytes body = 2;
+// 登录
+message S2C_Login{
+    required string uuid = 1;
+}
+
+message C2C_Login{
+
 }
 
 // 帧消息
@@ -17,21 +21,20 @@ message C2S_Frames{
     PlayerMove playerMove = 1;
 }
 
-message PlayerMove {
-    required int32 dt = 1;
-    required int32 playerId = 2;
-    int32 velocityX = 3;
-    int32 velocityY = 4;
-}
-
 // 加入房间
 message S2C_PlayerJoin {
-    string serverTime = 1;
+    required string uuid = 1;
+    required TowInt position =2;
+    required TowInt velocity =3;
+}
+
+message C2S_PlayerJoin {
+    required string uuid = 1;
 }
 
 // 离开房间
 message S2C_PlayerLeave {
-    string serverTime = 1;
+    required string uuid = 1;
 }
 
 // 心跳检测
@@ -42,6 +45,36 @@ message S2C_HeartBeat {
 message C2S_HeartBeat {
     int32 serverTime = 1;
 }
+
+// 一次性同步房间对战状态
+message S2C_SyncRoomStatus {
+    repeated Player players = 1;
+}
+
+message TowInt {
+    required int32 v1 = 1;
+    required int32 v2 = 2;
+}
+
+message PlayerMove {
+    required int32 dt = 1;
+    required int32 playerId = 2;
+    int32 velocityX = 3;
+    int32 velocityY = 4;
+}
+
+message Player{
+    required string uuid = 1;
+    required TowInt position =2;
+    required TowInt velocity =3;
+}
+
+message CommonData {
+    int32 protoId = 1;
+    bytes body = 2;
+}
+
+
 
 
 
