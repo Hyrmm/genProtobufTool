@@ -10,15 +10,31 @@ message C2C_Login{
 
 }
 
+// 登陆
+message S2C_Login{
+
+}
+
+message C2C_Login{
+
+}
+
 // 帧消息
 message S2C_Frames{
-    required int32 timePast = 1;
-    required int32 frames = 2;
+    int32 timePast = 1;
+    int32 frames = 2;
     repeated PlayerMove playerMove = 3;
 }
 
 message C2S_Frames{
     PlayerMove playerMove = 1;
+}
+
+message PlayerMove {
+    int32 dt = 1;
+    int32 playerId = 2;
+    int32 velocityX = 3;
+    int32 velocityY = 4;
 }
 
 // 加入房间
