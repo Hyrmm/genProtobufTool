@@ -6,51 +6,31 @@ message S2C_Login{
     required string uuid = 1;
 }
 
-message C2C_Login{
-
-}
-
-// 登陆
-message S2C_Login{
-
-}
-
-message C2C_Login{
+message C2S_Login{
 
 }
 
 // 帧消息
 message S2C_Frames{
-    int32 timePast = 1;
-    int32 frames = 2;
+    int32 frames = 1;
+    int32 timePast = 2;
     repeated PlayerMove playerMove = 3;
+    repeated PlayerJoin playerJoin = 4;
+    repeated PlayerLeave playerLeave = 5;
 }
 
 message C2S_Frames{
     PlayerMove playerMove = 1;
 }
 
-message PlayerMove {
-    int32 dt = 1;
-    int32 playerId = 2;
-    int32 velocityX = 3;
-    int32 velocityY = 4;
-}
-
-// 加入房间
-message S2C_PlayerJoin {
-    required string uuid = 1;
-    required TowInt position =2;
-    required TowInt velocity =3;
-}
-
+//加入房间
 message C2S_PlayerJoin {
-    required string uuid = 1;
+
 }
 
-// 离开房间
-message S2C_PlayerLeave {
-    required string uuid = 1;
+//离开房间
+message C2S_PlayerLeave {
+
 }
 
 // 心跳检测
@@ -62,9 +42,10 @@ message C2S_HeartBeat {
     int32 serverTime = 1;
 }
 
-// 一次性同步房间对战状态
+// 以切片的方式同步房间历史帧
 message S2C_SyncRoomStatus {
-    repeated Player players = 1;
+    required int32 isSyncFinish = 1;    //0未完成 1完成
+    repeated S2C_Frames frames = 2;
 }
 
 message TowInt {
@@ -74,9 +55,17 @@ message TowInt {
 
 message PlayerMove {
     required int32 dt = 1;
-    required int32 playerId = 2;
+    required string playerId = 2;
     int32 velocityX = 3;
     int32 velocityY = 4;
+}
+
+message PlayerJoin {
+    required Player player = 1;
+}
+
+message PlayerLeave{
+    required Player player = 1;
 }
 
 message Player{

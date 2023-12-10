@@ -1,65 +1,5 @@
-export interface CommonData {
-  protoId?: number;
-  body?: Uint8Array;
-}
-
-export function encodeCommonData(message: CommonData): Uint8Array {
-  let bb = popByteBuffer();
-  _encodeCommonData(message, bb);
-  return toUint8Array(bb);
-}
-
-function _encodeCommonData(message: CommonData, bb: ByteBuffer): void {
-  // optional int32 protoId = 1;
-  let $protoId = message.protoId;
-  if ($protoId !== undefined) {
-    writeVarint32(bb, 8);
-    writeVarint64(bb, intToLong($protoId));
-  }
-
-  // optional bytes body = 2;
-  let $body = message.body;
-  if ($body !== undefined) {
-    writeVarint32(bb, 18);
-    writeVarint32(bb, $body.length), writeBytes(bb, $body);
-  }
-}
-
-export function decodeCommonData(binary: Uint8Array): CommonData {
-  return _decodeCommonData(wrapByteBuffer(binary));
-}
-
-function _decodeCommonData(bb: ByteBuffer): CommonData {
-  let message: CommonData = {} as any;
-
-  end_of_message: while (!isAtEnd(bb)) {
-    let tag = readVarint32(bb);
-
-    switch (tag >>> 3) {
-      case 0:
-        break end_of_message;
-
-      // optional int32 protoId = 1;
-      case 1: {
-        message.protoId = readVarint32(bb);
-        break;
-      }
-
-      // optional bytes body = 2;
-      case 2: {
-        message.body = readBytes(bb, readVarint32(bb));
-        break;
-      }
-
-      default:
-        skipUnknownField(bb, tag & 7);
-    }
-  }
-
-  return message;
-}
-
 export interface S2C_Login {
+  uuid: string;
 }
 
 export function encodeS2C_Login(message: S2C_Login): Uint8Array {
@@ -69,6 +9,12 @@ export function encodeS2C_Login(message: S2C_Login): Uint8Array {
 }
 
 function _encodeS2C_Login(message: S2C_Login, bb: ByteBuffer): void {
+  // required string uuid = 1;
+  let $uuid = message.uuid;
+  if ($uuid !== undefined) {
+    writeVarint32(bb, 10);
+    writeString(bb, $uuid);
+  }
 }
 
 export function decodeS2C_Login(binary: Uint8Array): S2C_Login {
@@ -85,32 +31,41 @@ function _decodeS2C_Login(bb: ByteBuffer): S2C_Login {
       case 0:
         break end_of_message;
 
+      // required string uuid = 1;
+      case 1: {
+        message.uuid = readString(bb, readVarint32(bb));
+        break;
+      }
+
       default:
         skipUnknownField(bb, tag & 7);
     }
   }
 
+  if (message.uuid === undefined)
+    throw new Error("Missing required field: uuid");
+
   return message;
 }
 
-export interface C2C_Login {
+export interface C2S_Login {
 }
 
-export function encodeC2C_Login(message: C2C_Login): Uint8Array {
+export function encodeC2S_Login(message: C2S_Login): Uint8Array {
   let bb = popByteBuffer();
-  _encodeC2C_Login(message, bb);
+  _encodeC2S_Login(message, bb);
   return toUint8Array(bb);
 }
 
-function _encodeC2C_Login(message: C2C_Login, bb: ByteBuffer): void {
+function _encodeC2S_Login(message: C2S_Login, bb: ByteBuffer): void {
 }
 
-export function decodeC2C_Login(binary: Uint8Array): C2C_Login {
-  return _decodeC2C_Login(wrapByteBuffer(binary));
+export function decodeC2S_Login(binary: Uint8Array): C2S_Login {
+  return _decodeC2S_Login(wrapByteBuffer(binary));
 }
 
-function _decodeC2C_Login(bb: ByteBuffer): C2C_Login {
-  let message: C2C_Login = {} as any;
+function _decodeC2S_Login(bb: ByteBuffer): C2S_Login {
+  let message: C2S_Login = {} as any;
 
   end_of_message: while (!isAtEnd(bb)) {
     let tag = readVarint32(bb);
@@ -128,9 +83,11 @@ function _decodeC2C_Login(bb: ByteBuffer): C2C_Login {
 }
 
 export interface S2C_Frames {
-  timePast: number;
-  frames: number;
+  frames?: number;
+  timePast?: number;
   playerMove?: PlayerMove[];
+  playerJoin?: PlayerJoin[];
+  playerLeave?: PlayerLeave[];
 }
 
 export function encodeS2C_Frames(message: S2C_Frames): Uint8Array {
@@ -140,18 +97,18 @@ export function encodeS2C_Frames(message: S2C_Frames): Uint8Array {
 }
 
 function _encodeS2C_Frames(message: S2C_Frames, bb: ByteBuffer): void {
-  // required int32 timePast = 1;
-  let $timePast = message.timePast;
-  if ($timePast !== undefined) {
-    writeVarint32(bb, 8);
-    writeVarint64(bb, intToLong($timePast));
-  }
-
-  // required int32 frames = 2;
+  // optional int32 frames = 1;
   let $frames = message.frames;
   if ($frames !== undefined) {
-    writeVarint32(bb, 16);
+    writeVarint32(bb, 8);
     writeVarint64(bb, intToLong($frames));
+  }
+
+  // optional int32 timePast = 2;
+  let $timePast = message.timePast;
+  if ($timePast !== undefined) {
+    writeVarint32(bb, 16);
+    writeVarint64(bb, intToLong($timePast));
   }
 
   // repeated PlayerMove playerMove = 3;
@@ -161,6 +118,32 @@ function _encodeS2C_Frames(message: S2C_Frames, bb: ByteBuffer): void {
       writeVarint32(bb, 26);
       let nested = popByteBuffer();
       _encodePlayerMove(value, nested);
+      writeVarint32(bb, nested.limit);
+      writeByteBuffer(bb, nested);
+      pushByteBuffer(nested);
+    }
+  }
+
+  // repeated PlayerJoin playerJoin = 4;
+  let array$playerJoin = message.playerJoin;
+  if (array$playerJoin !== undefined) {
+    for (let value of array$playerJoin) {
+      writeVarint32(bb, 34);
+      let nested = popByteBuffer();
+      _encodePlayerJoin(value, nested);
+      writeVarint32(bb, nested.limit);
+      writeByteBuffer(bb, nested);
+      pushByteBuffer(nested);
+    }
+  }
+
+  // repeated PlayerLeave playerLeave = 5;
+  let array$playerLeave = message.playerLeave;
+  if (array$playerLeave !== undefined) {
+    for (let value of array$playerLeave) {
+      writeVarint32(bb, 42);
+      let nested = popByteBuffer();
+      _encodePlayerLeave(value, nested);
       writeVarint32(bb, nested.limit);
       writeByteBuffer(bb, nested);
       pushByteBuffer(nested);
@@ -182,15 +165,15 @@ function _decodeS2C_Frames(bb: ByteBuffer): S2C_Frames {
       case 0:
         break end_of_message;
 
-      // required int32 timePast = 1;
+      // optional int32 frames = 1;
       case 1: {
-        message.timePast = readVarint32(bb);
+        message.frames = readVarint32(bb);
         break;
       }
 
-      // required int32 frames = 2;
+      // optional int32 timePast = 2;
       case 2: {
-        message.frames = readVarint32(bb);
+        message.timePast = readVarint32(bb);
         break;
       }
 
@@ -203,16 +186,28 @@ function _decodeS2C_Frames(bb: ByteBuffer): S2C_Frames {
         break;
       }
 
+      // repeated PlayerJoin playerJoin = 4;
+      case 4: {
+        let limit = pushTemporaryLength(bb);
+        let values = message.playerJoin || (message.playerJoin = []);
+        values.push(_decodePlayerJoin(bb));
+        bb.limit = limit;
+        break;
+      }
+
+      // repeated PlayerLeave playerLeave = 5;
+      case 5: {
+        let limit = pushTemporaryLength(bb);
+        let values = message.playerLeave || (message.playerLeave = []);
+        values.push(_decodePlayerLeave(bb));
+        bb.limit = limit;
+        break;
+      }
+
       default:
         skipUnknownField(bb, tag & 7);
     }
   }
-
-  if (message.timePast === undefined)
-    throw new Error("Missing required field: timePast");
-
-  if (message.frames === undefined)
-    throw new Error("Missing required field: frames");
 
   return message;
 }
@@ -270,55 +265,24 @@ function _decodeC2S_Frames(bb: ByteBuffer): C2S_Frames {
   return message;
 }
 
-export interface PlayerMove {
-  dt: number;
-  playerId: number;
-  velocityX?: number;
-  velocityY?: number;
+export interface C2S_PlayerJoin {
 }
 
-export function encodePlayerMove(message: PlayerMove): Uint8Array {
+export function encodeC2S_PlayerJoin(message: C2S_PlayerJoin): Uint8Array {
   let bb = popByteBuffer();
-  _encodePlayerMove(message, bb);
+  _encodeC2S_PlayerJoin(message, bb);
   return toUint8Array(bb);
 }
 
-function _encodePlayerMove(message: PlayerMove, bb: ByteBuffer): void {
-  // required int32 dt = 1;
-  let $dt = message.dt;
-  if ($dt !== undefined) {
-    writeVarint32(bb, 8);
-    writeVarint64(bb, intToLong($dt));
-  }
-
-  // required int32 playerId = 2;
-  let $playerId = message.playerId;
-  if ($playerId !== undefined) {
-    writeVarint32(bb, 16);
-    writeVarint64(bb, intToLong($playerId));
-  }
-
-  // optional int32 velocityX = 3;
-  let $velocityX = message.velocityX;
-  if ($velocityX !== undefined) {
-    writeVarint32(bb, 24);
-    writeVarint64(bb, intToLong($velocityX));
-  }
-
-  // optional int32 velocityY = 4;
-  let $velocityY = message.velocityY;
-  if ($velocityY !== undefined) {
-    writeVarint32(bb, 32);
-    writeVarint64(bb, intToLong($velocityY));
-  }
+function _encodeC2S_PlayerJoin(message: C2S_PlayerJoin, bb: ByteBuffer): void {
 }
 
-export function decodePlayerMove(binary: Uint8Array): PlayerMove {
-  return _decodePlayerMove(wrapByteBuffer(binary));
+export function decodeC2S_PlayerJoin(binary: Uint8Array): C2S_PlayerJoin {
+  return _decodeC2S_PlayerJoin(wrapByteBuffer(binary));
 }
 
-function _decodePlayerMove(bb: ByteBuffer): PlayerMove {
-  let message: PlayerMove = {} as any;
+function _decodeC2S_PlayerJoin(bb: ByteBuffer): C2S_PlayerJoin {
+  let message: C2S_PlayerJoin = {} as any;
 
   end_of_message: while (!isAtEnd(bb)) {
     let tag = readVarint32(bb);
@@ -326,83 +290,6 @@ function _decodePlayerMove(bb: ByteBuffer): PlayerMove {
     switch (tag >>> 3) {
       case 0:
         break end_of_message;
-
-      // required int32 dt = 1;
-      case 1: {
-        message.dt = readVarint32(bb);
-        break;
-      }
-
-      // required int32 playerId = 2;
-      case 2: {
-        message.playerId = readVarint32(bb);
-        break;
-      }
-
-      // optional int32 velocityX = 3;
-      case 3: {
-        message.velocityX = readVarint32(bb);
-        break;
-      }
-
-      // optional int32 velocityY = 4;
-      case 4: {
-        message.velocityY = readVarint32(bb);
-        break;
-      }
-
-      default:
-        skipUnknownField(bb, tag & 7);
-    }
-  }
-
-  if (message.dt === undefined)
-    throw new Error("Missing required field: dt");
-
-  if (message.playerId === undefined)
-    throw new Error("Missing required field: playerId");
-
-  return message;
-}
-
-export interface S2C_PlayerJoin {
-  serverTime?: string;
-}
-
-export function encodeS2C_PlayerJoin(message: S2C_PlayerJoin): Uint8Array {
-  let bb = popByteBuffer();
-  _encodeS2C_PlayerJoin(message, bb);
-  return toUint8Array(bb);
-}
-
-function _encodeS2C_PlayerJoin(message: S2C_PlayerJoin, bb: ByteBuffer): void {
-  // optional string serverTime = 1;
-  let $serverTime = message.serverTime;
-  if ($serverTime !== undefined) {
-    writeVarint32(bb, 10);
-    writeString(bb, $serverTime);
-  }
-}
-
-export function decodeS2C_PlayerJoin(binary: Uint8Array): S2C_PlayerJoin {
-  return _decodeS2C_PlayerJoin(wrapByteBuffer(binary));
-}
-
-function _decodeS2C_PlayerJoin(bb: ByteBuffer): S2C_PlayerJoin {
-  let message: S2C_PlayerJoin = {} as any;
-
-  end_of_message: while (!isAtEnd(bb)) {
-    let tag = readVarint32(bb);
-
-    switch (tag >>> 3) {
-      case 0:
-        break end_of_message;
-
-      // optional string serverTime = 1;
-      case 1: {
-        message.serverTime = readString(bb, readVarint32(bb));
-        break;
-      }
 
       default:
         skipUnknownField(bb, tag & 7);
@@ -412,31 +299,24 @@ function _decodeS2C_PlayerJoin(bb: ByteBuffer): S2C_PlayerJoin {
   return message;
 }
 
-export interface S2C_PlayerLeave {
-  serverTime?: string;
+export interface C2S_PlayerLeave {
 }
 
-export function encodeS2C_PlayerLeave(message: S2C_PlayerLeave): Uint8Array {
+export function encodeC2S_PlayerLeave(message: C2S_PlayerLeave): Uint8Array {
   let bb = popByteBuffer();
-  _encodeS2C_PlayerLeave(message, bb);
+  _encodeC2S_PlayerLeave(message, bb);
   return toUint8Array(bb);
 }
 
-function _encodeS2C_PlayerLeave(message: S2C_PlayerLeave, bb: ByteBuffer): void {
-  // optional string serverTime = 1;
-  let $serverTime = message.serverTime;
-  if ($serverTime !== undefined) {
-    writeVarint32(bb, 10);
-    writeString(bb, $serverTime);
-  }
+function _encodeC2S_PlayerLeave(message: C2S_PlayerLeave, bb: ByteBuffer): void {
 }
 
-export function decodeS2C_PlayerLeave(binary: Uint8Array): S2C_PlayerLeave {
-  return _decodeS2C_PlayerLeave(wrapByteBuffer(binary));
+export function decodeC2S_PlayerLeave(binary: Uint8Array): C2S_PlayerLeave {
+  return _decodeC2S_PlayerLeave(wrapByteBuffer(binary));
 }
 
-function _decodeS2C_PlayerLeave(bb: ByteBuffer): S2C_PlayerLeave {
-  let message: S2C_PlayerLeave = {} as any;
+function _decodeC2S_PlayerLeave(bb: ByteBuffer): C2S_PlayerLeave {
+  let message: C2S_PlayerLeave = {} as any;
 
   end_of_message: while (!isAtEnd(bb)) {
     let tag = readVarint32(bb);
@@ -444,12 +324,6 @@ function _decodeS2C_PlayerLeave(bb: ByteBuffer): S2C_PlayerLeave {
     switch (tag >>> 3) {
       case 0:
         break end_of_message;
-
-      // optional string serverTime = 1;
-      case 1: {
-        message.serverTime = readString(bb, readVarint32(bb));
-        break;
-      }
 
       default:
         skipUnknownField(bb, tag & 7);
@@ -542,6 +416,510 @@ function _decodeC2S_HeartBeat(bb: ByteBuffer): C2S_HeartBeat {
       // optional int32 serverTime = 1;
       case 1: {
         message.serverTime = readVarint32(bb);
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  return message;
+}
+
+export interface S2C_SyncRoomStatus {
+  isSyncFinish: number;
+  frames?: S2C_Frames[];
+}
+
+export function encodeS2C_SyncRoomStatus(message: S2C_SyncRoomStatus): Uint8Array {
+  let bb = popByteBuffer();
+  _encodeS2C_SyncRoomStatus(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodeS2C_SyncRoomStatus(message: S2C_SyncRoomStatus, bb: ByteBuffer): void {
+  // required int32 isSyncFinish = 1;
+  let $isSyncFinish = message.isSyncFinish;
+  if ($isSyncFinish !== undefined) {
+    writeVarint32(bb, 8);
+    writeVarint64(bb, intToLong($isSyncFinish));
+  }
+
+  // repeated S2C_Frames frames = 2;
+  let array$frames = message.frames;
+  if (array$frames !== undefined) {
+    for (let value of array$frames) {
+      writeVarint32(bb, 18);
+      let nested = popByteBuffer();
+      _encodeS2C_Frames(value, nested);
+      writeVarint32(bb, nested.limit);
+      writeByteBuffer(bb, nested);
+      pushByteBuffer(nested);
+    }
+  }
+}
+
+export function decodeS2C_SyncRoomStatus(binary: Uint8Array): S2C_SyncRoomStatus {
+  return _decodeS2C_SyncRoomStatus(wrapByteBuffer(binary));
+}
+
+function _decodeS2C_SyncRoomStatus(bb: ByteBuffer): S2C_SyncRoomStatus {
+  let message: S2C_SyncRoomStatus = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // required int32 isSyncFinish = 1;
+      case 1: {
+        message.isSyncFinish = readVarint32(bb);
+        break;
+      }
+
+      // repeated S2C_Frames frames = 2;
+      case 2: {
+        let limit = pushTemporaryLength(bb);
+        let values = message.frames || (message.frames = []);
+        values.push(_decodeS2C_Frames(bb));
+        bb.limit = limit;
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  if (message.isSyncFinish === undefined)
+    throw new Error("Missing required field: isSyncFinish");
+
+  return message;
+}
+
+export interface TowInt {
+  v1: number;
+  v2: number;
+}
+
+export function encodeTowInt(message: TowInt): Uint8Array {
+  let bb = popByteBuffer();
+  _encodeTowInt(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodeTowInt(message: TowInt, bb: ByteBuffer): void {
+  // required int32 v1 = 1;
+  let $v1 = message.v1;
+  if ($v1 !== undefined) {
+    writeVarint32(bb, 8);
+    writeVarint64(bb, intToLong($v1));
+  }
+
+  // required int32 v2 = 2;
+  let $v2 = message.v2;
+  if ($v2 !== undefined) {
+    writeVarint32(bb, 16);
+    writeVarint64(bb, intToLong($v2));
+  }
+}
+
+export function decodeTowInt(binary: Uint8Array): TowInt {
+  return _decodeTowInt(wrapByteBuffer(binary));
+}
+
+function _decodeTowInt(bb: ByteBuffer): TowInt {
+  let message: TowInt = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // required int32 v1 = 1;
+      case 1: {
+        message.v1 = readVarint32(bb);
+        break;
+      }
+
+      // required int32 v2 = 2;
+      case 2: {
+        message.v2 = readVarint32(bb);
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  if (message.v1 === undefined)
+    throw new Error("Missing required field: v1");
+
+  if (message.v2 === undefined)
+    throw new Error("Missing required field: v2");
+
+  return message;
+}
+
+export interface PlayerMove {
+  dt: number;
+  playerId: string;
+  velocityX?: number;
+  velocityY?: number;
+}
+
+export function encodePlayerMove(message: PlayerMove): Uint8Array {
+  let bb = popByteBuffer();
+  _encodePlayerMove(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodePlayerMove(message: PlayerMove, bb: ByteBuffer): void {
+  // required int32 dt = 1;
+  let $dt = message.dt;
+  if ($dt !== undefined) {
+    writeVarint32(bb, 8);
+    writeVarint64(bb, intToLong($dt));
+  }
+
+  // required string playerId = 2;
+  let $playerId = message.playerId;
+  if ($playerId !== undefined) {
+    writeVarint32(bb, 18);
+    writeString(bb, $playerId);
+  }
+
+  // optional int32 velocityX = 3;
+  let $velocityX = message.velocityX;
+  if ($velocityX !== undefined) {
+    writeVarint32(bb, 24);
+    writeVarint64(bb, intToLong($velocityX));
+  }
+
+  // optional int32 velocityY = 4;
+  let $velocityY = message.velocityY;
+  if ($velocityY !== undefined) {
+    writeVarint32(bb, 32);
+    writeVarint64(bb, intToLong($velocityY));
+  }
+}
+
+export function decodePlayerMove(binary: Uint8Array): PlayerMove {
+  return _decodePlayerMove(wrapByteBuffer(binary));
+}
+
+function _decodePlayerMove(bb: ByteBuffer): PlayerMove {
+  let message: PlayerMove = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // required int32 dt = 1;
+      case 1: {
+        message.dt = readVarint32(bb);
+        break;
+      }
+
+      // required string playerId = 2;
+      case 2: {
+        message.playerId = readString(bb, readVarint32(bb));
+        break;
+      }
+
+      // optional int32 velocityX = 3;
+      case 3: {
+        message.velocityX = readVarint32(bb);
+        break;
+      }
+
+      // optional int32 velocityY = 4;
+      case 4: {
+        message.velocityY = readVarint32(bb);
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  if (message.dt === undefined)
+    throw new Error("Missing required field: dt");
+
+  if (message.playerId === undefined)
+    throw new Error("Missing required field: playerId");
+
+  return message;
+}
+
+export interface PlayerJoin {
+  player: Player;
+}
+
+export function encodePlayerJoin(message: PlayerJoin): Uint8Array {
+  let bb = popByteBuffer();
+  _encodePlayerJoin(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodePlayerJoin(message: PlayerJoin, bb: ByteBuffer): void {
+  // required Player player = 1;
+  let $player = message.player;
+  if ($player !== undefined) {
+    writeVarint32(bb, 10);
+    let nested = popByteBuffer();
+    _encodePlayer($player, nested);
+    writeVarint32(bb, nested.limit);
+    writeByteBuffer(bb, nested);
+    pushByteBuffer(nested);
+  }
+}
+
+export function decodePlayerJoin(binary: Uint8Array): PlayerJoin {
+  return _decodePlayerJoin(wrapByteBuffer(binary));
+}
+
+function _decodePlayerJoin(bb: ByteBuffer): PlayerJoin {
+  let message: PlayerJoin = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // required Player player = 1;
+      case 1: {
+        let limit = pushTemporaryLength(bb);
+        message.player = _decodePlayer(bb);
+        bb.limit = limit;
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  if (message.player === undefined)
+    throw new Error("Missing required field: player");
+
+  return message;
+}
+
+export interface PlayerLeave {
+  player: Player;
+}
+
+export function encodePlayerLeave(message: PlayerLeave): Uint8Array {
+  let bb = popByteBuffer();
+  _encodePlayerLeave(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodePlayerLeave(message: PlayerLeave, bb: ByteBuffer): void {
+  // required Player player = 1;
+  let $player = message.player;
+  if ($player !== undefined) {
+    writeVarint32(bb, 10);
+    let nested = popByteBuffer();
+    _encodePlayer($player, nested);
+    writeVarint32(bb, nested.limit);
+    writeByteBuffer(bb, nested);
+    pushByteBuffer(nested);
+  }
+}
+
+export function decodePlayerLeave(binary: Uint8Array): PlayerLeave {
+  return _decodePlayerLeave(wrapByteBuffer(binary));
+}
+
+function _decodePlayerLeave(bb: ByteBuffer): PlayerLeave {
+  let message: PlayerLeave = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // required Player player = 1;
+      case 1: {
+        let limit = pushTemporaryLength(bb);
+        message.player = _decodePlayer(bb);
+        bb.limit = limit;
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  if (message.player === undefined)
+    throw new Error("Missing required field: player");
+
+  return message;
+}
+
+export interface Player {
+  uuid: string;
+  position: TowInt;
+  velocity: TowInt;
+}
+
+export function encodePlayer(message: Player): Uint8Array {
+  let bb = popByteBuffer();
+  _encodePlayer(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodePlayer(message: Player, bb: ByteBuffer): void {
+  // required string uuid = 1;
+  let $uuid = message.uuid;
+  if ($uuid !== undefined) {
+    writeVarint32(bb, 10);
+    writeString(bb, $uuid);
+  }
+
+  // required TowInt position = 2;
+  let $position = message.position;
+  if ($position !== undefined) {
+    writeVarint32(bb, 18);
+    let nested = popByteBuffer();
+    _encodeTowInt($position, nested);
+    writeVarint32(bb, nested.limit);
+    writeByteBuffer(bb, nested);
+    pushByteBuffer(nested);
+  }
+
+  // required TowInt velocity = 3;
+  let $velocity = message.velocity;
+  if ($velocity !== undefined) {
+    writeVarint32(bb, 26);
+    let nested = popByteBuffer();
+    _encodeTowInt($velocity, nested);
+    writeVarint32(bb, nested.limit);
+    writeByteBuffer(bb, nested);
+    pushByteBuffer(nested);
+  }
+}
+
+export function decodePlayer(binary: Uint8Array): Player {
+  return _decodePlayer(wrapByteBuffer(binary));
+}
+
+function _decodePlayer(bb: ByteBuffer): Player {
+  let message: Player = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // required string uuid = 1;
+      case 1: {
+        message.uuid = readString(bb, readVarint32(bb));
+        break;
+      }
+
+      // required TowInt position = 2;
+      case 2: {
+        let limit = pushTemporaryLength(bb);
+        message.position = _decodeTowInt(bb);
+        bb.limit = limit;
+        break;
+      }
+
+      // required TowInt velocity = 3;
+      case 3: {
+        let limit = pushTemporaryLength(bb);
+        message.velocity = _decodeTowInt(bb);
+        bb.limit = limit;
+        break;
+      }
+
+      default:
+        skipUnknownField(bb, tag & 7);
+    }
+  }
+
+  if (message.uuid === undefined)
+    throw new Error("Missing required field: uuid");
+
+  if (message.position === undefined)
+    throw new Error("Missing required field: position");
+
+  if (message.velocity === undefined)
+    throw new Error("Missing required field: velocity");
+
+  return message;
+}
+
+export interface CommonData {
+  protoId?: number;
+  body?: Uint8Array;
+}
+
+export function encodeCommonData(message: CommonData): Uint8Array {
+  let bb = popByteBuffer();
+  _encodeCommonData(message, bb);
+  return toUint8Array(bb);
+}
+
+function _encodeCommonData(message: CommonData, bb: ByteBuffer): void {
+  // optional int32 protoId = 1;
+  let $protoId = message.protoId;
+  if ($protoId !== undefined) {
+    writeVarint32(bb, 8);
+    writeVarint64(bb, intToLong($protoId));
+  }
+
+  // optional bytes body = 2;
+  let $body = message.body;
+  if ($body !== undefined) {
+    writeVarint32(bb, 18);
+    writeVarint32(bb, $body.length), writeBytes(bb, $body);
+  }
+}
+
+export function decodeCommonData(binary: Uint8Array): CommonData {
+  return _decodeCommonData(wrapByteBuffer(binary));
+}
+
+function _decodeCommonData(bb: ByteBuffer): CommonData {
+  let message: CommonData = {} as any;
+
+  end_of_message: while (!isAtEnd(bb)) {
+    let tag = readVarint32(bb);
+
+    switch (tag >>> 3) {
+      case 0:
+        break end_of_message;
+
+      // optional int32 protoId = 1;
+      case 1: {
+        message.protoId = readVarint32(bb);
+        break;
+      }
+
+      // optional bytes body = 2;
+      case 2: {
+        message.body = readBytes(bb, readVarint32(bb));
         break;
       }
 

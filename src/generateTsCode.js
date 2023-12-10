@@ -16,7 +16,7 @@ const protoName2IdObject = protoMapFile.getVariableDeclaration("protoName2Id").g
 
 
 const { loadSync } = pbjs
-const protoRoot = loadSync("./Game.proto")
+const protoRoot = loadSync("./src/proto/Game.proto")
 const gameProtoRoot = protoRoot.Game.nested
 for (const [index, msgName] of Object.keys(gameProtoRoot).entries()) {
     // 过滤实际传输消息协议
