@@ -70,8 +70,9 @@ message PlayerLeave{
 
 message Player{
     required string uuid = 1;
-    required TowInt position =2;
-    required TowInt velocity =3;
+    required string role = 2;
+    required TowInt position =3;
+    required TowInt velocity =4;
 }
 
 message CommonData {
