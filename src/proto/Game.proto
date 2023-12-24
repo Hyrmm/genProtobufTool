@@ -7,7 +7,8 @@ message S2C_Login{
 }
 
 message C2S_Login{
-
+    required string account = 1;
+    required string password = 2;
 }
 
 // 帧消息
